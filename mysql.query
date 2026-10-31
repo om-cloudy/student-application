@@ -1,0 +1,18 @@
+mysql -h YOUR_RDS_ENDPOINT -P 3306 -u admin -p
+CREATE DATABASE student_db;
+USE student_db;
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    course VARCHAR(100),
+    age INT
+);
+SELECT * FROM students;
+INSERT INTO students (name, email, course, age)
+VALUES ('Om', 'om@gmail.com', 'DevOps', 22);
+UPDATE students
+SET course = 'AWS'
+WHERE id = 1;
+DELETE FROM students
+WHERE id = 1;
