@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 25px auto;
+            box-shadow: 0 3px 12px #00000015;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            background: #2563eb;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .add-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .table-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            box-shadow: 0 3px 12px #00000015;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        th {
+            background: #1e293b;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+        }
+
+        #message {
+            text-align: center;
+            margin: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Student Management System</h1>
+
+    <div class="form-box">
+        <h2>Add New Student</h2>
+
+        <form id="studentForm">
+
+            <input type="text" id="name"
+                placeholder="Enter Student Name" required>
+
+            <input type="email" id="email"
+                placeholder="Enter Email" required>
+
+            <input type="text" id="course"
+                placeholder="Enter Course" required>
+
+            <input type="number" id="age"
+                placeholder="Enter Age" min="1" required>
+
+            <button type="submit" class="add-btn">
+                Add Student
+            </button>
+
+        </form>
+
+        <p id="message"></p>
+    </div>
+
+    <div class="table-box">
+
+        <h2>Student Records</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th>Age</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="studentList"></tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+const API = '/api/students';
+
+const form = document.getElementById('studentForm');
+const message = document.getElementById('message');
+const studentList = document.getElementById('studentList');
+
+// Fetch and display students
+async function displayStudents() {
+    try {
+        const response = await fetch(API);
+
+        if (!response.ok) {
+            throw new Error('Unable to fetch students');
+        }
+
+        const students = await response.json();
+
+        studentList.innerHTML = '';
+
+        students.forEach(student => {
+            const row = document.createElement('tr');
+
+            [student.id, student.name, student.email,
+             student.course, student.age].forEach(value => {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            const actionCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+
+            deleteButton.textContent = 'Delete';
+            deleteButton.className = 'delete-btn';
+            deleteButton.onclick = () => deleteStudent(student.id);
+
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+
+            studentList.appendChild(row);
+        });
+
+    } catch (error) {
+        message.textContent = error.message;
+    }
+}
+
+// Add student
+form.addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const student = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        course: document.getElementById('course').value.trim(),
+        age: Number(document.getElementById('age').value)
+    };
+
+    try {
+        const response = await fetch(API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(student)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Unable to add student');
+        }
+
+        message.textContent = 'Student added successfully!';
+        form.reset();
+        displayStudents();
+
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+
+// Delete student
+async function deleteStudent(id) {
+    if (!confirm('Are you sure you want to delete this student?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API}/${id}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Unable to delete student');
+        }
+
+        message.textContent = 'Student deleted successfully!';
+        displayStudents();
+
+    } catch (error) {
+        message.textContent = error.message;
+    }
+}
+
+// Load students on page open
+displayStudents();
+
+</script>
+
+</body>
+</html>
